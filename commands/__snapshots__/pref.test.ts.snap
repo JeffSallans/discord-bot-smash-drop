@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`preference preference works correctly 1`] = `
+"Command: Get Naut Preference
+test :Legendary: :Swiggins: :Sentry: :Yoolip: :Epic: :Coco: :Jimmy: :Lonestar: :MaxFocus: :Skolldir: :Ban: :ChuchoKrokk: :Derpl: :Dizzy: :Rocco: :Yuri:
+"
+`;
+
+exports[`preference setup works correctly 1`] = `
+"Command: Setup
+test preference updated
+"
+`;

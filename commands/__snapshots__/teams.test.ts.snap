@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`teams works with 4 players 1`] = `
+"Left Team: hasp, thynix
+Right Team: math, mlripper"
+`;
+
+exports[`teams works with 6 players 1`] = `
+"Left Team: math, mlripper, csg
+Right Team: qazwode, hasp, thynix"
+`;
+
+exports[`teams works with no players 1`] = `
+"Left Team:
+Right Team: "
+`;
+
+exports[`teams works with uneven players 1`] = `
+"Left Team: qazwode, hasp
+Right Team: mlripper, math, thynix"
+`;

@@ -1,0 +1,16 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+exports[`drop works with no arguments 1`] = `
+"
+:Rare::Gnaw:  :Rare::Ayla:  :Epic::Derpl:  :Rare::Swiggins:  :Epic::Skree: -- Drop #1 cgs
+:Rare::Jimmy:  :Rare::Qitara:  :Rare::Yoolip:  :Rare::VinnieandSpike:  :Epic::Ksenia: -- Drop #3 hasp
+:Epic::Coco:  :Rare::Froggy:  :Rare::Gnaw:  :Rare::Penny:  :Rare::Ted: -- Drop #2 mathmatical
+:Epic::Derpl:  :GoldenRare::Lonestar:  :Rare::MaxFocus:  :Rare::Ksenia:  :Rare::Ted: -- Drop #4 mlripper
+:Rare::Derpl:  :Rare::Penny:  :Rare::SnorkGunk:  :Epic::Gnaw:  :Rare::Clunk: -- Drop #6 qazwode
+:Rare::Lonestar:  :Rare::Swiggins:  :GoldenEpic::MaxFocus:  :Rare::SnorkGunk:  :Rare::Penny: -- Drop #5 thynix
+:Rare::Scoop:  :Rare::Penny:  :Rare::Froggy:  :Epic::Skolldir:  :Rare::SnorkGunk: -- Drop #7 test "
+`;
+
+exports[`drop works with player args 1`] = `
+"
+:Rare::Scoop:  :Rare::Penny:  :Rare::Froggy:  :Epic::Skolldir:  :Rare::SnorkGunk: -- Drop #7 test "
+`;
