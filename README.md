@@ -12,7 +12,6 @@ Based on the SitePoint  article: [https://www.sitepoint.com/discord-bot-node-js/
 - [Discord.js]() See npm dependencies
 - [Lodash]() See npm dependencies
 - [Docker]() See Dockerfile
-- [Github Actions]() See .github folder
 
 ## Deployment
 
