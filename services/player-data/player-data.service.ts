@@ -1,10 +1,10 @@
 import { Document } from 'mongoose';
 import { filter, find, map } from 'lodash';
 import { IPlayer, Player } from '../../db/collections/Player'
-import { Naut } from '../naut';
+import { Character } from '../character';
 
-import * as nautJsonData from '../naut-data.json';
-import { NautToEmoji } from '../naut-to-emoji';
+import * as characterJsonData from '../character-data.json';
+import { CharacterToEmoji } from '../character-to-emoji';
 import _ = require('lodash');
 import { Emoji } from 'discord.js';
 import { TierToEmoji } from '../tier-to-emoji';
@@ -33,7 +33,7 @@ export const getPlayer = async (playerName: string): Promise<IPlayer|null> => {
   return player;
 };
 
-/** Adds a new user to the naut-drop bot.  Returns true if record was created. */
+/** Adds a new user to the character-drop bot.  Returns true if record was created. */
 export const savePlayer = async (newPlayer: IPlayer): Promise<Document<IPlayer>> => {
   // Check if player already exists
   let player = await getMongoPlayerById(newPlayer.player);
@@ -58,70 +58,70 @@ const getMongoPlayerById = async (player: string): Promise<Document<IPlayer>> =>
   });
 };
 
-/** parses the naut preference string to NautPref object */
-export const parseRawNautPref = (msg, nautPrefString: string): Naut[] => {
+/** parses the character preference string to CharacterPref object */
+export const parseRawCharacterPref = (msg, characterPrefString: string): Character[] => {
   return [];
 }
 
-/** parses the naut preference arguments to NautPref object */
-export const parseNautPref = (msg,
-  legendaryNautList: string[],
-  epicNautList: string[],
-  banNautList: string[]
-): Naut[] => {
+/** parses the character preference arguments to CharacterPref object */
+export const parseCharacterPref = (msg,
+  legendaryCharacterList: string[],
+  epicCharacterList: string[],
+  banCharacterList: string[]
+): Character[] => {
 
-  const preferences = _.map(nautJsonData as Naut[], (pref) => {
+  const preferences = _.map(characterJsonData as Character[], (pref) => {
     pref.tier = undefined;
     pref.isGolden = false;
     return pref;
   });
 
   // Set legendary pref
-  _.forEach(legendaryNautList, (legendaryNaut) => {
-    const legendaryNautEmoji = parseNaut(msg, legendaryNaut);
-    const pref = _.find(preferences, (naut) => naut.id === legendaryNautEmoji?.value);
+  _.forEach(legendaryCharacterList, (legendaryCharacter) => {
+    const legendaryCharacterEmoji = parseCharacter(msg, legendaryCharacter);
+    const pref = _.find(preferences, (character) => character.id === legendaryCharacterEmoji?.value);
     pref.tier = 'legendary';
   });
 
   // Set epic pref
-  _.forEach(epicNautList, (epicNaut) => {
-    const epicNautEmoji = parseNaut(msg, epicNaut);
-    const pref = _.find(preferences, (naut) => naut.id === epicNautEmoji?.value);
+  _.forEach(epicCharacterList, (epicCharacter) => {
+    const epicCharacterEmoji = parseCharacter(msg, epicCharacter);
+    const pref = _.find(preferences, (character) => character.id === epicCharacterEmoji?.value);
     pref.tier = 'epic';
   });
 
   // Set common/ban pref
-  _.forEach(banNautList, (banNaut) => {
-    const banNautEmoji = parseNaut(msg, banNaut);
-    const pref = _.find(preferences, (naut) => naut.id === banNautEmoji?.value);
+  _.forEach(banCharacterList, (banCharacter) => {
+    const banCharacterEmoji = parseCharacter(msg, banCharacter);
+    const pref = _.find(preferences, (character) => character.id === banCharacterEmoji?.value);
     pref.tier = 'common';
   });
 
   return preferences;
 }
 
-/** Returns naut from string */
-const parseNaut = (msg, nautEmojiString: string): NautToEmoji|null => {
-  const regexResult = nautEmojiString.match(/:(.*?):/);
+/** Returns character from string */
+const parseCharacter = (msg, characterEmojiString: string): CharacterToEmoji|null => {
+  const regexResult = characterEmojiString.match(/:(.*?):/);
   const emojiDescription = _.get(regexResult, '[1]', null);
-  if (emojiDescription === null) throw 'Unknown naut';
+  if (emojiDescription === null) throw 'Unknown character';
 
-  const nautEmoji = NautToEmoji.getEnumFromDescription(emojiDescription)
-  return nautEmoji;
+  const characterEmoji = CharacterToEmoji.getEnumFromDescription(emojiDescription)
+  return characterEmoji;
 };
 
-/** Returns the naut preference as a string */
-export const nautPrefToString = (msg, nautPref: Naut[]): string => {
-  const legendaryNauts = getNautString(msg, _.filter(nautPref, (pref) => pref.tier === 'legendary'));
-  const epicNauts = getNautString(msg, _.filter(nautPref, (pref) => pref.tier === 'epic'));
-  const banNauts = getNautString(msg, _.filter(nautPref, (pref) => pref.tier === 'common'));
+/** Returns the character preference as a string */
+export const characterPrefToString = (msg, characterPref: Character[]): string => {
+  const legendaryCharacters = getCharacterString(msg, _.filter(characterPref, (pref) => pref.tier === 'legendary'));
+  const epicCharacters = getCharacterString(msg, _.filter(characterPref, (pref) => pref.tier === 'epic'));
+  const banCharacters = getCharacterString(msg, _.filter(characterPref, (pref) => pref.tier === 'common'));
 
-  return `${getEmoji(msg, TierToEmoji.LEGENDARY.description)} ${legendaryNauts} ${getEmoji(msg, TierToEmoji.EPIC.description)} ${epicNauts} ${getEmoji(msg, TierToEmoji.BAN.description)} ${banNauts}`;
+  return `${getEmoji(msg, TierToEmoji.LEGENDARY.description)} ${legendaryCharacters} ${getEmoji(msg, TierToEmoji.EPIC.description)} ${epicCharacters} ${getEmoji(msg, TierToEmoji.BAN.description)} ${banCharacters}`;
 };
 
-const getNautString = (msg, nautList: Naut[]): string => {
-  return _.reduce(nautList, (resultSoFar, naut) => {
-    const name = getEmoji(msg, NautToEmoji.getEnumFromValue(naut.name).description);
+const getCharacterString = (msg, characterList: Character[]): string => {
+  return _.reduce(characterList, (resultSoFar, character) => {
+    const name = getEmoji(msg, CharacterToEmoji.getEnumFromValue(character.name).description);
     if (resultSoFar === '') {
       resultSoFar = `${name}`;
     } else {

@@ -1,7 +1,7 @@
 import { Schema, model, Model, Document } from 'mongoose';
-import { Naut } from '../../services/naut';
+import { Character } from '../../services/character';
 
-/** A user of the naut-drops app, and their corresponding data */
+/** A user of the character-drops app, and their corresponding data */
 export interface IPlayer {
     /** The name of the given player */
     player: string,
@@ -11,8 +11,8 @@ export interface IPlayer {
     goldenCount: number,
     /** How many goldens the player has earned total */
     earnedGoldenCount: number,
-    /** The naut preferences of the player */
-    nautPref: Naut[],
+    /** The character preferences of the player */
+    characterPref: Character[],
 };
 
 const playerSchema = new Schema({
@@ -20,7 +20,7 @@ const playerSchema = new Schema({
   discordUserId: String,
   goldenCount: Number,
   earnedGoldenCount: Number,
-  nautPref: [{
+  characterPref: [{
     id: String,
     name: String,
     tier: String,

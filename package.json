@@ -1,16 +1,16 @@
 {
-  "name": "discord-bot-naut-drop",
+  "name": "discord-bot-character-drop",
   "version": "1.0.0",
-  "description": "A node.js discord bot with the functionality of the awesomenauts drafter website",
+  "description": "A node.js discord bot with the functionality of the awesomecharacters drafter website",
   "main": "index.ts",
   "scripts": {
     "start": "node ./out/index.js",
     "build": "tsc --build tsconfig.json",
     "build-for-debug": "tsc --build tsconfig.json",
     "test": "jest --runInBand",
-    "docker:build": "docker build . --build-arg TOKEN --build-arg MONGO_URL -t jeffsallans/discord-bot-naut-drop",
-    "docker:run": "docker run -p 443:443 jeffsallans/discord-bot-naut-drop",
-    "docker:push": "docker push jeffsallans/discord-bot-naut-drop",
+    "docker:build": "docker build . --build-arg TOKEN --build-arg MONGO_URL -t jeffsallans/discord-bot-character-drop",
+    "docker:run": "docker run -p 443:443 jeffsallans/discord-bot-character-drop",
+    "docker:push": "docker push jeffsallans/discord-bot-character-drop",
     "deploy": "npm run build && npm run docker:build && npm run docker:push"
   },
   "author": "Jeff Sallans",

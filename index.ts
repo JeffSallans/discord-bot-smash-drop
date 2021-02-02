@@ -1,19 +1,18 @@
 import { defaultTo, isEmpty, trim } from 'lodash';
-import { Naut } from './services/naut';
-import { NautDataService } from './services/naut-data.service';
-import { NautToEmoji } from './services/naut-to-emoji';
+import { Character } from './services/character';
+import { CharacterDataService } from './services/character-data.service';
+import { CharacterToEmoji } from './services/character-to-emoji';
 import { TierToEmoji } from './services/tier-to-emoji';
 import { setupConnection } from './db/mongodbConnection';
-import { getEmoji, getPlayer, getPlayerList, nautPrefToString, parseNautPref, savePlayer } from './services/player-data/player-data.service';
+import { getEmoji, getPlayer, getPlayerList, characterPrefToString, parseCharacterPref, savePlayer } from './services/player-data/player-data.service';
 import { connection, connections, Mongoose } from 'mongoose';
-import { IPlayer } from './db/collections/Player';
 
 const _ = require('lodash');
 require('dotenv').config();
 const Discord = require('discord.js');
 const bot = new Discord.Client();
 const TOKEN = process.env.TOKEN;
-const nautDataService = new NautDataService();
+const characterDataService = new CharacterDataService();
 
 export const commands = {};
 let resolveReadyForCommands;
@@ -42,7 +41,6 @@ bot.on('ready', async () => {
 
   // Uncomment to test commands
   await commands['drop']({ reply: (m) => {console.log(m)}}, ['drop']);
-  // await commands['reroll']({ reply: (m) => {console.log(m)}}, ['reroll', 'mathmatical']);
 });
 
 /**
@@ -51,8 +49,8 @@ bot.on('ready', async () => {
  */
 commands['help'] = (msg, args) => {
   msg.reply(`Command: Help
-Command format is: @naut-packs <command> <argument1> <argument2>
-All <command> options: verbose-help, drop, setup, reroll, users, nauts, goldens-add, goldens, preference, teams, health
+Command format is: @character-packs <command> <argument1> <argument2>
+All <command> options: verbose-help, drop, setup, reroll, users, characters, goldens-add, goldens, preference, teams, health
 `);
 }
 
@@ -62,24 +60,24 @@ All <command> options: verbose-help, drop, setup, reroll, users, nauts, goldens-
  */
 commands['verbose-help'] = (msg, args) => {
   msg.reply(`Command: Verbose Help
-Command format is: @naut-packs <command> <arguments1> <argument2>
-All <command> options: verbose-help, drop, setup, reroll, users, nauts, goldens-add, goldens, preference, teams, health, verbose-help
+Command format is: @character-packs <command> <arguments1> <argument2>
+All <command> options: verbose-help, drop, setup, reroll, users, characters, goldens-add, goldens, preference, teams, health, verbose-help
 
-@naut-packs users
-@naut-packs nauts
-@setup <userTag> :Legendary: <naut1> <naut2> <naut3> :Epic: <naut1> <naut2> <naut3> <naut4> <naut5> :Ban: <naut1> <naut2> <naut3> <naut4> <naut5>
+@character-packs users
+@character-packs characters
+@setup <userTag> :Legendary: <character1> <character2> <character3> :Epic: <character1> <character2> <character3> <character4> <character5> :Ban: <character1> <character2> <character3> <character4> <character5>
 - userTag is the person the preference is for
-@naut-packs drop <userTag1> <userTag2> <...>
+@character-packs drop <userTag1> <userTag2> <...>
 - userTag is the people to roll for
-@naut-packs preference <userTag>
+@character-packs preference <userTag>
 - userTag is the person display a preference for
-@naut-packs reroll <userTag>
+@character-packs reroll <userTag>
 - userTag is the person the drop is for
-@naut-packs goldens <userTag>
+@character-packs goldens <userTag>
 - userTag is the person the drop is for
-@naut-packs goldens-add <userTag>
+@character-packs goldens-add <userTag>
 - userTag is the person the drop is for
-@naut-packs teams <userTag1> <userTag2> <userTag3> <userTag4>
+@character-packs teams <userTag1> <userTag2> <userTag3> <userTag4>
 - userTag team members to shuffle
   `);
 }
@@ -111,35 +109,35 @@ ${userListString}
 `);
 }
 
-commands['nauts'] = (msg, args) => {
-  const allNauts = NautToEmoji.getAllPairs();
-  const allNautsString = _.reduce(allNauts, (resultSoFar, naut) => {
+commands['characters'] = (msg, args) => {
+  const allCharacters = CharacterToEmoji.getAllPairs();
+  const allCharactersString = _.reduce(allCharacters, (resultSoFar, character) => {
     if (resultSoFar === '') {
-      resultSoFar = naut.description;
+      resultSoFar = character.description;
     } else {
-      resultSoFar += `, ${naut.description}`;
+      resultSoFar += `, ${character.description}`;
     }
     return resultSoFar;
   }, '');
-  msg.reply(`Command: Get Naut Names
-${allNautsString}
+  msg.reply(`Command: Get Character Names
+${allCharactersString}
 `);
 }
 
 commands['preference'] = async (msg, args) => {
   const [command, nameTag] = args;
   if (isEmpty(nameTag)) {
-    msg.reply(`Command: Get Naut Preference
-Invalid message format, missing nameTag argument. See @naut-drop help for details.
+    msg.reply(`Command: Get Character Preference
+Invalid message format, missing nameTag argument. See @character-drop help for details.
     `);
     return;
   }
 
   const player = await getPlayer(nameTag);
-  const nautPrefString = nautPrefToString(msg, player.nautPref);
+  const characterPrefString = characterPrefToString(msg, player.characterPref);
 
-  msg.reply(`Command: Get Naut Preference
-${nameTag} ${nautPrefString}
+  msg.reply(`Command: Get Character Preference
+${nameTag} ${characterPrefString}
 `);
 }
 
@@ -147,19 +145,19 @@ commands['setup'] = async (msg, args) => {
   const [
     command,
     nameTag,
-    legendaryIcon, legNaut1, legNaut2, legNaut3,
-    epicIcon, epicNaut1, epicNaut2, epicNaut3, epicNaut4, epicNaut5,
-    banIcon, banNaut1, banNaut2, banNaut3, banNaut4, banNaut5
+    legendaryIcon, legCharacter1, legCharacter2, legCharacter3,
+    epicIcon, epicCharacter1, epicCharacter2, epicCharacter3, epicCharacter4, epicCharacter5,
+    banIcon, banCharacter1, banCharacter2, banCharacter3, banCharacter4, banCharacter5
   ] = args;
   if (isEmpty(nameTag)) {
-    msg.reply(`Command: Get Naut Preference
-Invalid message format, missing nameTag argument. See @naut-drop help for details.
+    msg.reply(`Command: Get Character Preference
+Invalid message format, missing nameTag argument. See @character-drop help for details.
     `);
     return;
   }
-  if (isEmpty(banNaut5)) {
-    msg.reply(`Command: Get Naut Preference
-Invalid message format, not enough arguments. See @naut-drop help for details.
+  if (isEmpty(banCharacter5)) {
+    msg.reply(`Command: Get Character Preference
+Invalid message format, not enough arguments. See @character-drop help for details.
     `);
     return;
   }
@@ -167,8 +165,8 @@ Invalid message format, not enough arguments. See @naut-drop help for details.
   if (legendaryIcon !== getEmoji(msg, TierToEmoji.LEGENDARY.description).toString() ||
     epicIcon !== getEmoji(msg, TierToEmoji.EPIC.description).toString() ||
     banIcon !== getEmoji(msg, TierToEmoji.BAN.description).toString()) {
-    msg.reply(`Command: Get Naut Preference
-Invalid message format, incorrect number of legendary/epic nauts. See @naut-drop help for details.
+    msg.reply(`Command: Get Character Preference
+Invalid message format, incorrect number of legendary/epic characters. See @character-drop help for details.
     `);
     return;
   }
@@ -180,14 +178,14 @@ Invalid message format, incorrect number of legendary/epic nauts. See @naut-drop
       discordUserId: nameTag,
       goldenCount: 0,
       earnedGoldenCount: 0,
-      nautPref: [],
+      characterPref: [],
     };
   }
 
-  player.nautPref = parseNautPref(msg,
-    [legNaut1, legNaut2, legNaut3],
-    [epicNaut1, epicNaut2, epicNaut3, epicNaut4, epicNaut5],
-    [banNaut1, banNaut2, banNaut3, banNaut4, banNaut5]
+  player.characterPref = parseCharacterPref(msg,
+    [legCharacter1, legCharacter2, legCharacter3],
+    [epicCharacter1, epicCharacter2, epicCharacter3, epicCharacter4, epicCharacter5],
+    [banCharacter1, banCharacter2, banCharacter3, banCharacter4, banCharacter5]
   );
 
   await savePlayer(player);
@@ -231,8 +229,8 @@ ${message}`;
 commands['drop-get'] = async (msg, args) => {
   const [command, nameTag] = args;
   if (isEmpty(nameTag)) {
-    msg.reply(`Command: Get Naut Preference
-Invalid message format, missing nameTag argument. See @naut-drop help for details.
+    msg.reply(`Command: Get Character Preference
+Invalid message format, missing nameTag argument. See @character-drop help for details.
     `);
     return;
   }
@@ -251,15 +249,15 @@ const getDropMessage = async (msg, nameTag: string): Promise<string> => {
   }
 
   const player = await getPlayer(nameTag);
-  const pack = nautDataService.getRandomNautsPack(player)
-  const nautEmojis = _.map(pack, (naut: Naut|null) => {
-    const emojiString = NautToEmoji.getEnumFromValue(naut?.name)?.description;
-    const tierString = TierToEmoji.getEnumFromValue(`${_.defaultTo(_.get(naut, 'tier'), 'rare')}-${(naut?.isGolden) ? 'golden' : ''}`)?.description;
+  const pack = characterDataService.getRandomCharactersPack(player)
+  const characterEmojis = _.map(pack, (character: Character|null) => {
+    const emojiString = CharacterToEmoji.getEnumFromValue(character?.name)?.description;
+    const tierString = TierToEmoji.getEnumFromValue(`${_.defaultTo(_.get(character, 'tier'), 'rare')}-${(character?.isGolden) ? 'golden' : ''}`)?.description;
     return `${getEmoji(msg, tierString)}${getEmoji(msg, emojiString)}`;
   });
 
   dropCount++;
-  const message = `${nautEmojis[0]}  ${nautEmojis[1]}  ${nautEmojis[2]}  ${nautEmojis[3]}  ${nautEmojis[4]} -- Drop #${dropCount} ${nameTag} `;
+  const message = `${characterEmojis[0]}  ${characterEmojis[1]}  ${characterEmojis[2]}  ${characterEmojis[3]}  ${characterEmojis[4]} -- Drop #${dropCount} ${nameTag} `;
   setDropCache(nameTag, message);
   return message;
 }
@@ -283,7 +281,7 @@ commands['reroll'] = async (msg, args) => {
   const [command, nameTag] = args;
   if (isEmpty(nameTag)) {
     msg.reply(`Command: Reroll Drop
-Invalid message format, missing nameTag argument. See @naut-drop help for details.
+Invalid message format, missing nameTag argument. See @character-drop help for details.
     `);
     return;
   }
@@ -302,38 +300,38 @@ No golden counts to spend for a reroll
   await savePlayer(player);
   clearDropCache(nameTag);
 
-  const pack1 = nautDataService.getRandomNautsPack(player)
-  const pack2 = nautDataService.getRandomNautsPack(player)
-  const pack3 = nautDataService.getRandomNautsPack(player)
+  const pack1 = characterDataService.getRandomCharactersPack(player)
+  const pack2 = characterDataService.getRandomCharactersPack(player)
+  const pack3 = characterDataService.getRandomCharactersPack(player)
   const haul = [...pack1, ...pack2, ...pack3];
-  const sortedHaul: Naut[] = _.sortBy(_.uniqBy(haul, 'id'), (naut) => {
-    if (naut.tier === 'legendary' && naut.isGolden) return 1;
-    if (naut.tier === 'legendary') return 2;
-    if (naut.tier === 'epic' && naut.isGolden) return 3;
-    if (naut.tier === 'epic') return 4;
-    if (naut.tier === 'rare' && naut.isGolden) return 5;
+  const sortedHaul: Character[] = _.sortBy(_.uniqBy(haul, 'id'), (character) => {
+    if (character.tier === 'legendary' && character.isGolden) return 1;
+    if (character.tier === 'legendary') return 2;
+    if (character.tier === 'epic' && character.isGolden) return 3;
+    if (character.tier === 'epic') return 4;
+    if (character.tier === 'rare' && character.isGolden) return 5;
     return 6;
   });
 
   // Guarentee a legendary with golden roll
-  const hasLegendaryNauts = _.some(sortedHaul, (naut) => naut && (naut.tier === 'legendary'));
-  if (!hasLegendaryNauts) {
-    const legendaryNauts = _.filter(player.nautPref, (naut) => naut.tier === 'legendary') || [];
-    const shuffledLegendaryNauts = _.shuffle(legendaryNauts);
-    sortedHaul[0] = shuffledLegendaryNauts.pop();
+  const hasLegendaryCharacters = _.some(sortedHaul, (character) => character && (character.tier === 'legendary'));
+  if (!hasLegendaryCharacters) {
+    const legendaryCharacters = _.filter(player.characterPref, (character) => character.tier === 'legendary') || [];
+    const shuffledLegendaryCharacters = _.shuffle(legendaryCharacters);
+    sortedHaul[0] = shuffledLegendaryCharacters.pop();
   }
 
   // Keep top 5 results, then shuffle them
-  const finalHaul: Naut[] = _.shuffle(sortedHaul.slice(0, 5));
+  const finalHaul: Character[] = _.shuffle(sortedHaul.slice(0, 5));
 
-  const nautEmojis = _.map(finalHaul, (naut: Naut|null) => {
-    const emojiString = NautToEmoji.getEnumFromValue(naut?.name)?.description;
-    const tierString = TierToEmoji.getEnumFromValue(`${_.get(naut, 'tier', 'rare')}-${(naut?.isGolden) ? 'golden' : ''}`)?.description;
+  const characterEmojis = _.map(finalHaul, (character: Character|null) => {
+    const emojiString = CharacterToEmoji.getEnumFromValue(character?.name)?.description;
+    const tierString = TierToEmoji.getEnumFromValue(`${_.get(character, 'tier', 'rare')}-${(character?.isGolden) ? 'golden' : ''}`)?.description;
     return `${getEmoji(msg, tierString)}${getEmoji(msg, emojiString)}`;
   });
 
   dropCount++;
-  const message = `${nautEmojis[0]}  ${nautEmojis[1]}  ${nautEmojis[2]}  ${nautEmojis[3]}  ${nautEmojis[4]} -- Drop #${dropCount} ${nameTag} `;
+  const message = `${characterEmojis[0]}  ${characterEmojis[1]}  ${characterEmojis[2]}  ${characterEmojis[3]}  ${characterEmojis[4]} -- Drop #${dropCount} ${nameTag} `;
   setDropCache(nameTag, message);
 
   msg.reply(message);
@@ -343,7 +341,7 @@ commands['goldens'] = async (msg, args) => {
   const [command, nameTag] = args;
   if (isEmpty(nameTag)) {
     msg.reply(`Command: Golden Count
-Invalid message format, missing nameTag argument. See @naut-drop help for details.
+Invalid message format, missing nameTag argument. See @character-drop help for details.
     `);
     return;
   }
@@ -360,7 +358,7 @@ commands['goldens-add'] = async (msg, args) => {
   const [command, nameTag] = args;
   if (isEmpty(nameTag)) {
     msg.reply(`Command: Increment Golden Count
-Invalid message format, missing nameTag argument. See @naut-drop help for details.
+Invalid message format, missing nameTag argument. See @character-drop help for details.
     `);
     return;
   }
