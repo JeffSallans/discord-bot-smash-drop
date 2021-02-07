@@ -33,10 +33,19 @@ export const getPlayer = async (playerName: string): Promise<IPlayer|null> => {
   return player;
 };
 
+/** Returns a player for the given id */
+export const getPlayerByDiscordId = async (discordUserId: string): Promise<IPlayer|null> => {
+  const playerList = await getPlayerList();
+  const player = find(playerList, (target) => {
+    return target.discordUserId === _.toLower(discordUserId);
+  });
+  return player;
+};
+
 /** Adds a new user to the character-drop bot.  Returns true if record was created. */
 export const savePlayer = async (newPlayer: IPlayer): Promise<Document<IPlayer>> => {
   // Check if player already exists
-  let player = await getMongoPlayerById(newPlayer.player);
+  let player = await getMongoPlayerByDiscordId(newPlayer.discordUserId);
   if (!player) {
     player = new Player();
   }
@@ -52,6 +61,16 @@ export const savePlayer = async (newPlayer: IPlayer): Promise<Document<IPlayer>>
 const getMongoPlayerById = async (player: string): Promise<Document<IPlayer>> => {
   return new Promise((resolve, reject) => {
     Player.findOne( { "player": _.toLower(player) }, (err, result) => {
+      if (err) reject(err);
+      resolve(result);
+    })
+  });
+};
+
+/** Returns the list of players */
+const getMongoPlayerByDiscordId = async (discordUserId: string): Promise<Document<IPlayer>> => {
+  return new Promise((resolve, reject) => {
+    Player.findOne( { "discordUserId": _.toLower(discordUserId) }, (err, result) => {
       if (err) reject(err);
       resolve(result);
     })

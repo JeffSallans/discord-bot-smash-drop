@@ -4,8 +4,9 @@ import { CharacterDataService } from './services/character-data.service';
 import { CharacterToEmoji } from './services/character-to-emoji';
 import { TierToEmoji } from './services/tier-to-emoji';
 import { setupConnection } from './db/mongodbConnection';
-import { getEmoji, getPlayer, getPlayerList, characterPrefToString, parseCharacterPref, savePlayer } from './services/player-data/player-data.service';
+import { getEmoji, getPlayer, getPlayerList, characterPrefToString, parseCharacterPref, savePlayer, getPlayerByDiscordId } from './services/player-data/player-data.service';
 import { connection, connections, Mongoose } from 'mongoose';
+import { IPlayer } from './db/collections/Player';
 
 const _ = require('lodash');
 require('dotenv').config();
@@ -13,6 +14,19 @@ const Discord = require('discord.js');
 const bot = new Discord.Client();
 const TOKEN = process.env.TOKEN;
 const characterDataService = new CharacterDataService();
+
+/** Shape of the discord message received */
+interface DiscordMessage {
+  reply: (message: string) => void,
+  author: {
+    id: string,
+    username: string,
+  },
+  /** Message */
+  content: string,
+  /** Users mentioned in message */
+  mentions: any,
+}
 
 export const commands = {};
 let resolveReadyForCommands;
@@ -40,46 +54,18 @@ bot.on('ready', async () => {
   resolveReadyForCommands();
 
   // Uncomment to test commands
-  await commands['drop']({ reply: (m) => {console.log(m)}}, ['drop']);
+  await commands['drop']({ reply: (m) => {console.log(m)}, author: { username: 'Jeffufu', id: '158399207441432576'}}, ['drop']);
 });
 
 /**
  * Displays all possible funtionality to help the user
  * @param msg Discord message object
  */
-commands['help'] = (msg, args) => {
+commands['help'] = (msg: DiscordMessage, args) => {
   msg.reply(`Command: Help
 Command format is: @character-packs <command> <argument1> <argument2>
-All <command> options: verbose-help, drop, setup, reroll, users, characters, goldens-add, goldens, preference, teams, health
+All <command> options: drop, setup, reroll, characters, add-goldens, get-goldens, preference
 `);
-}
-
-/**
- * Displays all possible funtionality to help the user
- * @param msg Discord message object
- */
-commands['verbose-help'] = (msg, args) => {
-  msg.reply(`Command: Verbose Help
-Command format is: @character-packs <command> <arguments1> <argument2>
-All <command> options: verbose-help, drop, setup, reroll, users, characters, goldens-add, goldens, preference, teams, health, verbose-help
-
-@character-packs users
-@character-packs characters
-@setup <userTag> :Legendary: <character1> <character2> <character3> :Epic: <character1> <character2> <character3> <character4> <character5> :Ban: <character1> <character2> <character3> <character4> <character5>
-- userTag is the person the preference is for
-@character-packs drop <userTag1> <userTag2> <...>
-- userTag is the people to roll for
-@character-packs preference <userTag>
-- userTag is the person display a preference for
-@character-packs reroll <userTag>
-- userTag is the person the drop is for
-@character-packs goldens <userTag>
-- userTag is the person the drop is for
-@character-packs goldens-add <userTag>
-- userTag is the person the drop is for
-@character-packs teams <userTag1> <userTag2> <userTag3> <userTag4>
-- userTag team members to shuffle
-  `);
 }
 
 /**
@@ -125,39 +111,33 @@ ${allCharactersString}
 }
 
 commands['preference'] = async (msg, args) => {
-  const [command, nameTag] = args;
-  if (isEmpty(nameTag)) {
+  const player = await getPlayerByDiscordId(msg.author.id);
+  if (player == null) {
     msg.reply(`Command: Get Character Preference
-Invalid message format, missing nameTag argument. See @character-drop help for details.
+Player not setup, use @smash-drop setup command.
     `);
     return;
   }
 
-  const player = await getPlayer(nameTag);
   const characterPrefString = characterPrefToString(msg, player.characterPref);
 
   msg.reply(`Command: Get Character Preference
-${nameTag} ${characterPrefString}
+${msg.author.username} ${characterPrefString}
 `);
 }
 
 commands['setup'] = async (msg, args) => {
   const [
     command,
-    nameTag,
     legendaryIcon, legCharacter1, legCharacter2, legCharacter3,
     epicIcon, epicCharacter1, epicCharacter2, epicCharacter3, epicCharacter4, epicCharacter5,
     banIcon, banCharacter1, banCharacter2, banCharacter3, banCharacter4, banCharacter5
   ] = args;
-  if (isEmpty(nameTag)) {
-    msg.reply(`Command: Get Character Preference
-Invalid message format, missing nameTag argument. See @character-drop help for details.
-    `);
-    return;
-  }
+
   if (isEmpty(banCharacter5)) {
     msg.reply(`Command: Get Character Preference
-Invalid message format, not enough arguments. See @character-drop help for details.
+Invalid message format, not enough arguments. Example
+:large_orange_diamond: mario luigi peach :purple_square: link zelda sheik younglink toonlink :negative_squared_cross_mark: bowser boswerjr wario piranhaplant donkeykong
     `);
     return;
   }
@@ -166,16 +146,17 @@ Invalid message format, not enough arguments. See @character-drop help for detai
     epicIcon !== getEmoji(msg, TierToEmoji.EPIC.description).toString() ||
     banIcon !== getEmoji(msg, TierToEmoji.BAN.description).toString()) {
     msg.reply(`Command: Get Character Preference
-Invalid message format, incorrect number of legendary/epic characters. See @character-drop help for details.
+Invalid message format, incorrect number of legendary or epic characters. Example
+:large_orange_diamond: mario luigi peach :purple_square: link zelda sheik younglink toonlink :negative_squared_cross_mark: bowser boswerjr wario piranhaplant donkeykong
     `);
     return;
   }
 
-  let player = await getPlayer(nameTag);
+  let player = await getPlayerByDiscordId(msg.author.id);
   if (!player) {
     player = {
-      player: nameTag,
-      discordUserId: nameTag,
+      player: msg.author.username,
+      discordUserId: msg.author.id,
       goldenCount: 0,
       earnedGoldenCount: 0,
       characterPref: [],
@@ -191,31 +172,18 @@ Invalid message format, incorrect number of legendary/epic characters. See @char
   await savePlayer(player);
 
   msg.reply(`Command: Setup
-${nameTag} preference updated
+${msg.author.username} preference updated
 `);
 }
 
-commands['teams'] = async (msg, args) => {
-  const allPlayers = args.slice(1);
-  const shuffledPlayers = _.shuffle(allPlayers);
-
-  let halfwayThrough = Math.floor(shuffledPlayers.length / 2.0);
-  // or instead of floor you can use ceil depending on what side gets the extra data
-
-  let leftTeam = shuffledPlayers.slice(0, halfwayThrough);
-  let rightTeam = shuffledPlayers.slice(halfwayThrough, shuffledPlayers.length);
-
-  msg.reply(`Left Team: ${_.join(leftTeam, ', ')}
-Right Team: ${_.join(rightTeam, ', ')}`);
-}
-
-commands['drop'] = async (msg, args) => {
-  let allPlayers = args.slice(1);
+commands['drop'] = async (msg: DiscordMessage, args) => {
+  let allPlayers = msg.mentions.slice(1);
   if (allPlayers.length === 0) {
-    const playerList = await getPlayerList();
-    allPlayers = _.map(playerList, player => player.player);
+    const player = await getPlayerByDiscordId(msg.author.id);
+    allPlayers.push(player);
   }
-  const allMessages = await Promise.all(_.map(allPlayers, (player: string): Promise<string> => {
+
+  const allMessages = await Promise.all(_.map(allPlayers, (player: {id: string, username: string}): Promise<string> => {
     return getDropMessage(msg, player);
   }));
   const fullMessage = _.reduce(allMessages, (resultSoFar, message) => {
@@ -226,29 +194,16 @@ ${message}`;
   msg.reply(fullMessage);
 }
 
-commands['drop-get'] = async (msg, args) => {
-  const [command, nameTag] = args;
-  if (isEmpty(nameTag)) {
-    msg.reply(`Command: Get Character Preference
-Invalid message format, missing nameTag argument. See @character-drop help for details.
-    `);
-    return;
-  }
-
-  const message = await getDropMessage(msg, nameTag);
-  msg.reply(message);
-}
-
 let dropCount = 0;
 let cachedDropMap = {};
 let cacheTimeouts = {};
-const getDropMessage = async (msg, nameTag: string): Promise<string> => {
-  const cachedDrop = getDropCache(nameTag);
+const getDropMessage = async (msg: DiscordMessage, givenPlayer: { id: string, username: string}): Promise<string> => {
+  const cachedDrop = getDropCache(msg.author.id);
   if (!_.isNil(cachedDrop)) {
     return cachedDrop;
   }
 
-  const player = await getPlayer(nameTag);
+  const player = await getPlayerByDiscordId(givenPlayer.id);
   const pack = characterDataService.getRandomCharactersPack(player)
   const characterEmojis = _.map(pack, (character: Character|null) => {
     const emojiString = CharacterToEmoji.getEnumFromValue(character?.name)?.description;
@@ -257,8 +212,8 @@ const getDropMessage = async (msg, nameTag: string): Promise<string> => {
   });
 
   dropCount++;
-  const message = `${characterEmojis[0]}  ${characterEmojis[1]}  ${characterEmojis[2]}  ${characterEmojis[3]}  ${characterEmojis[4]} -- Drop #${dropCount} ${nameTag} `;
-  setDropCache(nameTag, message);
+  const message = `${characterEmojis[0]}  ${characterEmojis[1]}  ${characterEmojis[2]}  ${characterEmojis[3]}  ${characterEmojis[4]} -- Drop #${dropCount} ${player.player} `;
+  setDropCache(msg.author.id, message);
   return message;
 }
 
@@ -272,21 +227,21 @@ const setDropCache = (nameTag, message) => {
     cachedDropMap[nameTag] = null;
   }, 5 * 1000 * 60);
 }
+
 const clearDropCache = (nameTag) => {
   clearTimeout(cacheTimeouts[nameTag]);
   cachedDropMap[nameTag] = null;
 }
 
-commands['reroll'] = async (msg, args) => {
-  const [command, nameTag] = args;
-  if (isEmpty(nameTag)) {
-    msg.reply(`Command: Reroll Drop
-Invalid message format, missing nameTag argument. See @character-drop help for details.
+commands['reroll'] = async (msg: DiscordMessage, args) => {
+  const player = await getPlayerByDiscordId(msg.author.id);
+  if (player == null) {
+    msg.reply(`Command: Get Character Preference
+Player not setup, use @smash-drop setup command.
     `);
     return;
   }
 
-  const player = await getPlayer(nameTag);
   const goldenCount = defaultTo(player.goldenCount, 0);
 
   if (goldenCount === 0) {
@@ -298,7 +253,7 @@ No golden counts to spend for a reroll
 
   player.goldenCount--;
   await savePlayer(player);
-  clearDropCache(nameTag);
+  clearDropCache(msg.author.id);
 
   const pack1 = characterDataService.getRandomCharactersPack(player)
   const pack2 = characterDataService.getRandomCharactersPack(player)
@@ -331,49 +286,47 @@ No golden counts to spend for a reroll
   });
 
   dropCount++;
-  const message = `${characterEmojis[0]}  ${characterEmojis[1]}  ${characterEmojis[2]}  ${characterEmojis[3]}  ${characterEmojis[4]} -- Drop #${dropCount} ${nameTag} `;
-  setDropCache(nameTag, message);
+  const message = `${characterEmojis[0]}  ${characterEmojis[1]}  ${characterEmojis[2]}  ${characterEmojis[3]}  ${characterEmojis[4]} -- Drop #${dropCount} ${player.player} `;
+  setDropCache(msg.author.id, message);
 
   msg.reply(message);
 }
 
-commands['goldens'] = async (msg, args) => {
-  const [command, nameTag] = args;
-  if (isEmpty(nameTag)) {
-    msg.reply(`Command: Golden Count
-Invalid message format, missing nameTag argument. See @character-drop help for details.
+commands['get-goldens'] = async (msg, args) => {
+  const player = await getPlayerByDiscordId(msg.author.id);
+  if (player == null) {
+    msg.reply(`Command: Get Character Preference
+Player not setup, use @smash-drop setup command.
     `);
     return;
   }
 
-  const player = await getPlayer(nameTag);
   const goldenCount = defaultTo(player.goldenCount, 0);
 
   msg.reply(`Command: Golden Count
-Player: ${nameTag} Count: ${goldenCount}
+Player: ${msg.author.username} Count: ${goldenCount}
   `);
 }
 
-commands['goldens-add'] = async (msg, args) => {
-  const [command, nameTag] = args;
-  if (isEmpty(nameTag)) {
-    msg.reply(`Command: Increment Golden Count
-Invalid message format, missing nameTag argument. See @character-drop help for details.
+commands['add-goldens'] = async (msg: DiscordMessage, args) => {
+  const player = await getPlayerByDiscordId(msg.author.id);
+  if (player == null) {
+    msg.reply(`Command: Get Character Preference
+Player not setup, use @smash-drop setup command.
     `);
     return;
   }
 
-  const player = await getPlayer(nameTag);
   player.goldenCount = defaultTo(player.goldenCount, 0) + 1;
   player.earnedGoldenCount = defaultTo(player.earnedGoldenCount, 0) + 1;
   await savePlayer(player);
 
   msg.reply(`Command: Increment Golden Count
-Player: ${nameTag} Count: ${player.goldenCount}
+Player: ${msg.author.username} Count: ${player.goldenCount}
   `);
 }
 
-bot.on('message', async msg => {
+bot.on('message', async (msg: DiscordMessage) => {
   const content: string = msg.content;
   const taggedUser = msg.mentions.users.first();
 

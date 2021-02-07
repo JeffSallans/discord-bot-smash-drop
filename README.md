@@ -33,7 +33,7 @@ MONGO_URL=mongodb+srv://awesomecharacters_account:XXXXXXXXXXX@purethoughtlabs.ds
 ```
 3. Start VSCode debugger or run `npm run build` then `npm start`
 4. Add the discord bot to your server with the following URL
-`https://discord.com/oauth2/authorize?client_id=796206701127663616&scope=bot`
+`https://discord.com/oauth2/authorize?client_id=805982500110204928&scope=bot`
 Replace the client ID with your discord developer portal app client id.
 5. Interact with your Discord bot via your web browser
 
