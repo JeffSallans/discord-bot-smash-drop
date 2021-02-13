@@ -65,8 +65,8 @@ bot.on('ready', async () => {
  */
 commands['help'] = (msg: DiscordMessage, args) => {
   msg.reply(`Command: Help
-Setup command: \`@smash-drop setup :large_orange_diamond: mario luigi peach :purple_square: link zelda sheik younglink toonlink :negative_squared_cross_mark: bowser boswerjr wario piranhaplant donkeykong\`
-All <command> options: drop, setup, reroll, characters, add-golden, get-goldens, preference
+Setup message: @smash-drop setup 🔶 mario luigi peach 🟪 link zelda sheik younglink toonlink ❎ bowser boswerjr wario piranhaplant donkeykong
+All commands: drop, setup, reroll, characters, add-golden, get-goldens, preference
 `);
 }
 
@@ -139,7 +139,12 @@ commands['setup'] = async (msg, args) => {
   if (isEmpty(banCharacter5)) {
     msg.reply(`Command: Set Character Preference
 Invalid message format, not enough arguments. Example
-🔶 mario luigi peach 🟪 link zelda sheik younglink toonlink ❎ bowser boswerjr wario piranhaplant donkeykong
+\`@smash-drop setup 🔶 mario luigi peach 🟪 link zelda sheik younglink toonlink ❎ bowser boswerjr wario piranhaplant donkeykong\`
+🔶= your best 3 characters
+🟪= your 5 next best characters
+❎= 5 characters you never want to play
+Character lists can be found with \`@smash-drop characters\`
+Do not include spaces in the character names
     `);
     return;
   }
@@ -150,6 +155,11 @@ Invalid message format, not enough arguments. Example
     msg.reply(`Command: Set Character Preference
 Invalid message format, incorrect number of legendary or epic characters. Example
 \`@smash-drop setup 🔶 mario luigi peach 🟪 link zelda sheik younglink toonlink ❎ bowser boswerjr wario piranhaplant donkeykong\`
+🔶= your best 3 characters
+🟪= your 5 next best characters
+❎= 5 characters you never want to play
+Character lists can be found with \`@smash-drop characters\`
+Do not include spaces in the character names
     `);
     return;
   }

@@ -1,5 +1,5 @@
 {
-  "name": "discord-bot-character-drop",
+  "name": "discord-bot-smash-drop",
   "version": "1.0.0",
   "description": "A node.js discord bot with the functionality of the awesomecharacters drafter website",
   "main": "index.ts",
@@ -8,9 +8,9 @@
     "build": "rimraf out/* && tsc --build tsconfig.json",
     "build-for-debug": "rimraf out/* && tsc --build tsconfig.json",
     "test": "jest --runInBand",
-    "docker:build": "docker build . --build-arg TOKEN --build-arg MONGO_URL -t jeffsallans/discord-bot-character-drop",
-    "docker:run": "docker run -p 443:443 jeffsallans/discord-bot-character-drop",
-    "docker:push": "docker push jeffsallans/discord-bot-character-drop",
+    "docker:build": "docker build . -t jeffsallans/discord-bot-smash-drop",
+    "docker:run": "docker run -p 443:443 jeffsallans/discord-bot-smash-drop",
+    "docker:push": "docker push jeffsallans/discord-bot-smash-drop",
     "deploy": "npm run build && npm run docker:build && npm run docker:push"
   },
   "author": "Jeff Sallans",

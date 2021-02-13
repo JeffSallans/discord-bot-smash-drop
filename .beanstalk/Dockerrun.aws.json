@@ -1,7 +1,7 @@
 {
   "AWSEBDockerrunVersion": "1",
   "Image": {
-    "Name": "jeffsallans/discord-bot-character-drop",
+    "Name": "jeffsallans/discord-bot-smash-drop",
     "Update": "true"
   },
   "Ports": [
