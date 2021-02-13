@@ -19,7 +19,7 @@ Based on the SitePoint  article: [https://www.sitepoint.com/discord-bot-node-js/
 2. Pull dependencies with run `npm install`
 3. Compile typescript with run `npm run deploy`
 4. Set TOKEN and MONGO_URL in `./beanstalk/Dockerrun.aws.json`
-5. Deploy Container [AWS Dashboard](https://us-east-2.console.aws.amazon.com/elasticbeanstalk/home?region=us-east-2#/environment/dashboard?applicationName=discord-bot-smash-drop&environmentId=e-e7fkkyp7qa) (via AWS Elastic Beanstalk).  Upload the `./beanstalk/Dockerrun.aws.json`
+5. Deploy Container [AWS Dashboard](https://us-east-2.console.aws.amazon.com/elasticbeanstalk/home?region=us-east-2#/environment/dashboard?applicationName=discord-bot-smash-drop&environmentId=e-aruk3as8fy) (via AWS Elastic Beanstalk).  Upload the `./beanstalk/Dockerrun.aws.json`
 
 ## Local Development
 
