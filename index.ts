@@ -65,7 +65,7 @@ bot.on('ready', async () => {
  */
 commands['help'] = (msg: DiscordMessage, args) => {
   msg.reply(`Command: Help
-Setup message: @smash-drop setup 🔶 mario luigi peach 🟪 link zelda sheik younglink toonlink ❎ bowser boswerjr wario piranhaplant donkeykong
+Setup message: @smash-drop setup 🔶 mario luigi peach 🟪 link zelda sheik younglink toonlink ❎ miibrawler miiswordfighter miigunner littlemac pit
 All commands: drop, setup, reroll, characters, add-golden, get-goldens, preference
 `);
 }
@@ -139,7 +139,7 @@ commands['setup'] = async (msg, args) => {
   if (isEmpty(banCharacter5)) {
     msg.reply(`Command: Set Character Preference
 Invalid message format, not enough arguments. Example
-\`@smash-drop setup 🔶 mario luigi peach 🟪 link zelda sheik younglink toonlink ❎ bowser boswerjr wario piranhaplant donkeykong\`
+\`@smash-drop setup 🔶 mario luigi peach 🟪 link zelda sheik younglink toonlink ❎ miibrawler miiswordfighter miigunner littlemac pit\`
 🔶= your best 3 characters
 🟪= your 5 next best characters
 ❎= 5 characters you never want to play
@@ -154,7 +154,7 @@ Do not include spaces in the character names
     trim(banIcon) !== getEmoji(msg, TierToEmoji.BAN.description).toString()) {
     msg.reply(`Command: Set Character Preference
 Invalid message format, incorrect number of legendary or epic characters. Example
-\`@smash-drop setup 🔶 mario luigi peach 🟪 link zelda sheik younglink toonlink ❎ bowser boswerjr wario piranhaplant donkeykong\`
+\`@smash-drop setup 🔶 mario luigi peach 🟪 link zelda sheik younglink toonlink ❎ miibrawler miiswordfighter miigunner littlemac pit\`
 🔶= your best 3 characters
 🟪= your 5 next best characters
 ❎= 5 characters you never want to play
