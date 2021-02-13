@@ -1,5 +1,5 @@
 import { Document } from 'mongoose';
-import { filter, find, map } from 'lodash';
+import { filter, find, map, trim } from 'lodash';
 import { IPlayer, Player } from '../../db/collections/Player'
 import { Character } from '../character';
 
@@ -8,6 +8,8 @@ import { CharacterToEmoji } from '../character-to-emoji';
 import _ = require('lodash');
 import { Emoji } from 'discord.js';
 import { TierToEmoji } from '../tier-to-emoji';
+import { getCharacterFromUserString } from '../character-fuzzy-match/character-fuzzy-match.service';
+import { getDiscordMonospace } from '../monospacer/monospacer.service';
 
 
 /** Returns the list of players */
@@ -120,13 +122,10 @@ export const parseCharacterPref = (msg,
 }
 
 /** Returns character from string */
-const parseCharacter = (msg, characterEmojiString: string): CharacterToEmoji|null => {
-  const regexResult = characterEmojiString.match(/:(.*?):/);
-  const emojiDescription = _.get(regexResult, '[1]', null);
-  if (emojiDescription === null) throw 'Unknown character';
-
-  const characterEmoji = CharacterToEmoji.getEnumFromDescription(emojiDescription)
-  return characterEmoji;
+const parseCharacter = (msg, characterString: string): CharacterToEmoji|null => {
+  const emoji = getCharacterFromUserString(trim(characterString));
+  if (emoji === null) throw 'Unknown character';
+  return emoji;
 };
 
 /** Returns the character preference as a string */
@@ -142,9 +141,9 @@ const getCharacterString = (msg, characterList: Character[]): string => {
   return _.reduce(characterList, (resultSoFar, character) => {
     const name = getEmoji(msg, CharacterToEmoji.getEnumFromValue(character.name).description);
     if (resultSoFar === '') {
-      resultSoFar = `${name}`;
+      resultSoFar = `${getDiscordMonospace(name, 15)}`;
     } else {
-      resultSoFar += ` ${name}`;
+      resultSoFar += ` ${getDiscordMonospace(name, 15)}`;
     }
     return resultSoFar;
   }, '');
@@ -153,5 +152,5 @@ const getCharacterString = (msg, characterList: Character[]): string => {
 /** Returns the emoji or name if not found */
 export const getEmoji = (msg, emojiName): Emoji|string => {
   const emoji = _.get(msg, 'guild.emojis.cache', []).find(emoji => emoji.name == emojiName);
-  return _.defaultTo(emoji, `:${emojiName}:`);
+  return _.defaultTo(emoji, `${emojiName}`);
 }

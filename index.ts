@@ -1,4 +1,5 @@
-import { defaultTo, isEmpty, trim } from 'lodash';
+import { defaultTo, isEmpty, trim, keys, map } from 'lodash';
+import * as FuzzyMatching from 'fuzzy-matching';
 import { Character } from './services/character';
 import { CharacterDataService } from './services/character-data.service';
 import { CharacterToEmoji } from './services/character-to-emoji';
@@ -7,6 +8,7 @@ import { setupConnection } from './db/mongodbConnection';
 import { getEmoji, getPlayer, getPlayerList, characterPrefToString, parseCharacterPref, savePlayer, getPlayerByDiscordId } from './services/player-data/player-data.service';
 import { connection, connections, Mongoose } from 'mongoose';
 import { IPlayer } from './db/collections/Player';
+import { getDiscordMonospace } from './services/monospacer/monospacer.service';
 
 const _ = require('lodash');
 require('dotenv').config();
@@ -63,8 +65,8 @@ bot.on('ready', async () => {
  */
 commands['help'] = (msg: DiscordMessage, args) => {
   msg.reply(`Command: Help
-Command format is: @character-packs <command> <argument1> <argument2>
-All <command> options: drop, setup, reroll, characters, add-goldens, get-goldens, preference
+Setup command: \`@smash-drop setup :large_orange_diamond: mario luigi peach :purple_square: link zelda sheik younglink toonlink :negative_squared_cross_mark: bowser boswerjr wario piranhaplant donkeykong\`
+All <command> options: drop, setup, reroll, characters, add-golden, get-goldens, preference
 `);
 }
 
@@ -99,9 +101,9 @@ commands['characters'] = (msg, args) => {
   const allCharacters = CharacterToEmoji.getAllPairs();
   const allCharactersString = _.reduce(allCharacters, (resultSoFar, character) => {
     if (resultSoFar === '') {
-      resultSoFar = character.description;
+      resultSoFar = getDiscordMonospace(character.description, 15);
     } else {
-      resultSoFar += `, ${character.description}`;
+      resultSoFar += ` ${getDiscordMonospace(character.description, 15)}`;
     }
     return resultSoFar;
   }, '');
@@ -114,7 +116,7 @@ commands['preference'] = async (msg, args) => {
   const player = await getPlayerByDiscordId(msg.author.id);
   if (player == null) {
     msg.reply(`Command: Get Character Preference
-Player not setup, use @smash-drop setup command.
+Player not setup, use \`@smash-drop setup\` command.
     `);
     return;
   }
@@ -122,7 +124,7 @@ Player not setup, use @smash-drop setup command.
   const characterPrefString = characterPrefToString(msg, player.characterPref);
 
   msg.reply(`Command: Get Character Preference
-${msg.author.username} ${characterPrefString}
+${characterPrefString}
 `);
 }
 
@@ -135,19 +137,19 @@ commands['setup'] = async (msg, args) => {
   ] = args;
 
   if (isEmpty(banCharacter5)) {
-    msg.reply(`Command: Get Character Preference
+    msg.reply(`Command: Set Character Preference
 Invalid message format, not enough arguments. Example
-:large_orange_diamond: mario luigi peach :purple_square: link zelda sheik younglink toonlink :negative_squared_cross_mark: bowser boswerjr wario piranhaplant donkeykong
+🔶 mario luigi peach 🟪 link zelda sheik younglink toonlink ❎ bowser boswerjr wario piranhaplant donkeykong
     `);
     return;
   }
 
-  if (legendaryIcon !== getEmoji(msg, TierToEmoji.LEGENDARY.description).toString() ||
-    epicIcon !== getEmoji(msg, TierToEmoji.EPIC.description).toString() ||
-    banIcon !== getEmoji(msg, TierToEmoji.BAN.description).toString()) {
-    msg.reply(`Command: Get Character Preference
+  if (trim(legendaryIcon) !== getEmoji(msg, TierToEmoji.LEGENDARY.description).toString() ||
+    trim(epicIcon) !== getEmoji(msg, TierToEmoji.EPIC.description).toString() ||
+    trim(banIcon) !== getEmoji(msg, TierToEmoji.BAN.description).toString()) {
+    msg.reply(`Command: Set Character Preference
 Invalid message format, incorrect number of legendary or epic characters. Example
-:large_orange_diamond: mario luigi peach :purple_square: link zelda sheik younglink toonlink :negative_squared_cross_mark: bowser boswerjr wario piranhaplant donkeykong
+\`@smash-drop setup 🔶 mario luigi peach 🟪 link zelda sheik younglink toonlink ❎ bowser boswerjr wario piranhaplant donkeykong\`
     `);
     return;
   }
@@ -171,19 +173,28 @@ Invalid message format, incorrect number of legendary or epic characters. Exampl
 
   await savePlayer(player);
 
+  const characterPrefString = characterPrefToString(msg, player.characterPref);
+
   msg.reply(`Command: Setup
-${msg.author.username} preference updated
+${msg.author.username} preference updated to ${characterPrefString}
 `);
 }
 
 commands['drop'] = async (msg: DiscordMessage, args) => {
-  let allPlayers = msg.mentions.slice(1);
-  if (allPlayers.length === 0) {
+  let playerArray = msg?.mentions?.users;
+  let allPlayers = [];
+  if (typeof(playerArray) === 'object' && _.has(playerArray, 'toJson')) {
+    allPlayers = map(playerArray.toJson().slice(1), (player) => {
+      return getPlayerByDiscordId(player.id);
+    });
+  }
+
+  if (allPlayers?.length === null || allPlayers?.length === 0) {
     const player = await getPlayerByDiscordId(msg.author.id);
     allPlayers.push(player);
   }
 
-  const allMessages = await Promise.all(_.map(allPlayers, (player: {id: string, username: string}): Promise<string> => {
+  const allMessages = await Promise.all(_.map(allPlayers, (player: IPlayer): Promise<string> => {
     return getDropMessage(msg, player);
   }));
   const fullMessage = _.reduce(allMessages, (resultSoFar, message) => {
@@ -197,22 +208,22 @@ ${message}`;
 let dropCount = 0;
 let cachedDropMap = {};
 let cacheTimeouts = {};
-const getDropMessage = async (msg: DiscordMessage, givenPlayer: { id: string, username: string}): Promise<string> => {
+const getDropMessage = async (msg: DiscordMessage, givenPlayer: IPlayer|null): Promise<string> => {
+  // Check cache
   const cachedDrop = getDropCache(msg.author.id);
   if (!_.isNil(cachedDrop)) {
     return cachedDrop;
   }
 
-  const player = await getPlayerByDiscordId(givenPlayer.id);
-  const pack = characterDataService.getRandomCharactersPack(player)
+  const pack = characterDataService.getRandomCharactersPack(givenPlayer)
   const characterEmojis = _.map(pack, (character: Character|null) => {
     const emojiString = CharacterToEmoji.getEnumFromValue(character?.name)?.description;
     const tierString = TierToEmoji.getEnumFromValue(`${_.defaultTo(_.get(character, 'tier'), 'rare')}-${(character?.isGolden) ? 'golden' : ''}`)?.description;
-    return `${getEmoji(msg, tierString)}${getEmoji(msg, emojiString)}`;
+    return `${getEmoji(msg, tierString)}${getDiscordMonospace(getEmoji(msg, emojiString), 15)}`;
   });
 
   dropCount++;
-  const message = `${characterEmojis[0]}  ${characterEmojis[1]}  ${characterEmojis[2]}  ${characterEmojis[3]}  ${characterEmojis[4]} -- Drop #${dropCount} ${player.player} `;
+  const message = `${characterEmojis[0]}  ${characterEmojis[1]}  ${characterEmojis[2]}  ${characterEmojis[3]}  ${characterEmojis[4]}  ${givenPlayer.player} `;
   setDropCache(msg.author.id, message);
   return message;
 }
@@ -225,7 +236,7 @@ const setDropCache = (nameTag, message) => {
   cachedDropMap[nameTag] = message;
   cacheTimeouts[nameTag] = setTimeout(() => {
     cachedDropMap[nameTag] = null;
-  }, 5 * 1000 * 60);
+  }, 1 * 1000 * 60); // 1 minute cache
 }
 
 const clearDropCache = (nameTag) => {
@@ -237,7 +248,7 @@ commands['reroll'] = async (msg: DiscordMessage, args) => {
   const player = await getPlayerByDiscordId(msg.author.id);
   if (player == null) {
     msg.reply(`Command: Get Character Preference
-Player not setup, use @smash-drop setup command.
+Player not setup, use \`@smash-drop setup\` command.
     `);
     return;
   }
@@ -282,11 +293,11 @@ No golden counts to spend for a reroll
   const characterEmojis = _.map(finalHaul, (character: Character|null) => {
     const emojiString = CharacterToEmoji.getEnumFromValue(character?.name)?.description;
     const tierString = TierToEmoji.getEnumFromValue(`${_.get(character, 'tier', 'rare')}-${(character?.isGolden) ? 'golden' : ''}`)?.description;
-    return `${getEmoji(msg, tierString)}${getEmoji(msg, emojiString)}`;
+    return `${getEmoji(msg, tierString)}${getDiscordMonospace(getEmoji(msg, emojiString), 15)}`;
   });
 
   dropCount++;
-  const message = `${characterEmojis[0]}  ${characterEmojis[1]}  ${characterEmojis[2]}  ${characterEmojis[3]}  ${characterEmojis[4]} -- Drop #${dropCount} ${player.player} `;
+  const message = `${characterEmojis[0]}  ${characterEmojis[1]}  ${characterEmojis[2]}  ${characterEmojis[3]}  ${characterEmojis[4]}  ${player.player} `;
   setDropCache(msg.author.id, message);
 
   msg.reply(message);
@@ -296,7 +307,7 @@ commands['get-goldens'] = async (msg, args) => {
   const player = await getPlayerByDiscordId(msg.author.id);
   if (player == null) {
     msg.reply(`Command: Get Character Preference
-Player not setup, use @smash-drop setup command.
+Player not setup, use \`@smash-drop setup\` command.
     `);
     return;
   }
@@ -308,11 +319,11 @@ Player: ${msg.author.username} Count: ${goldenCount}
   `);
 }
 
-commands['add-goldens'] = async (msg: DiscordMessage, args) => {
+commands['add-golden'] = async (msg: DiscordMessage, args) => {
   const player = await getPlayerByDiscordId(msg.author.id);
   if (player == null) {
     msg.reply(`Command: Get Character Preference
-Player not setup, use @smash-drop setup command.
+Player not setup, use \`@smash-drop setup\` command.
     `);
     return;
   }
@@ -326,6 +337,9 @@ Player: ${msg.author.username} Count: ${player.goldenCount}
   `);
 }
 
+const possibleCommands = keys(commands);
+const commandFuzzyMatcher = new FuzzyMatching(possibleCommands);
+
 bot.on('message', async (msg: DiscordMessage) => {
   const content: string = msg.content;
   const taggedUser = msg.mentions.users.first();
@@ -335,12 +349,18 @@ bot.on('message', async (msg: DiscordMessage) => {
 
     try {
       // Trigger the appropriate function from the given command
-      const parsedCommandArray = content.split(`<@!${bot.user.id}>`);
+      const parsedCommandArray = content.replace(`<@${bot.user.id}>`, `<@!${bot.user.id}>`).split(`<@!${bot.user.id}>`);
       const parsedCommand = _.trim(_.get(parsedCommandArray, '[1]'));
       const args = _.map(parsedCommand.split(' '), (argument) => {
         return _.trim(argument)
       });
-      const command = _.get(commands, args[0], commands['help']);
+      const commandArg = args[0];
+      const commandMatch = commandFuzzyMatcher.get(commandArg);
+      let cleanedCommandArg = null;
+      if (commandMatch.distance > 0.5) {
+        cleanedCommandArg = commandMatch.value;
+      }
+      const command = _.get(commands, cleanedCommandArg, commands['help']);
 
       await command(msg, args);
     } catch (e) {

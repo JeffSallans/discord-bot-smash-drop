@@ -46,7 +46,7 @@ export class CharacterToEmoji extends Enum {
     static META_KNIGHT = new CharacterToEmoji('meta_knight', 'Meta Knight')
     static MEWTWO = new CharacterToEmoji('mewtwo', 'Mewtwo')
     static MII_BRAWLER = new CharacterToEmoji('mii_brawler', 'Mii Brawler')
-    static MII_SWORDFIGHTER = new CharacterToEmoji('mii_swordfighter', 'Mii Swordfighter')
+    static MII_SWORDFIGHTER = new CharacterToEmoji('mii_swordfighter', 'MiiSwordfighter')
     static MII_GUNNER = new CharacterToEmoji('mii_gunner', 'Mii Gunner')
     static MIN_MIN = new CharacterToEmoji('min_min', 'Min Min')
     static MR_GAME_AND_WATCH = new CharacterToEmoji('mr_game_and_watch', 'Mr Game & Watch')
