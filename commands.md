@@ -25,7 +25,7 @@ Type these discord messages out in a dm to @smash-drop or in any channel.
 
 >Do not include spaces in the character names
 
-![Setup Command Example](./markdown-assets/setup.png)
+![Setup Command Example](./markdown-assets/setup.PNG)
 
 #### Drop
 Returns 5 random characters with a guarenteed 🟪 or better.
@@ -34,7 +34,7 @@ Returns 5 random characters with a guarenteed 🟪 or better.
 @smash-drop drop
 ```
 
-![Drop Command Example](./markdown-assets/drop.png)
+![Drop Command Example](./markdown-assets/drop.PNG)
 
 You can roll drops for a group of users
 
@@ -84,7 +84,7 @@ This command lists all the smash characters setup in this bot
 @smash-drop characters
 ```
 
-![Characters Command Example](./markdown-assets/characters.png)
+![Characters Command Example](./markdown-assets/characters.PNG)
 
 #### Health
 
