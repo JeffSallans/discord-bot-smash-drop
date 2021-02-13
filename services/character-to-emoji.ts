@@ -27,7 +27,6 @@ export class CharacterToEmoji extends Enum {
     static INCINEROAR = new CharacterToEmoji('incineroar', 'Incineroar')
     static INKLING = new CharacterToEmoji('inkling', 'Inkling')
     static ISABELLE = new CharacterToEmoji('isabelle', 'Isabelle')
-    static IVYSAUR = new CharacterToEmoji('ivysaur', 'Ivysaur')
     static JIGGLYPUFF = new CharacterToEmoji('jigglypuff', 'Jigglypuff')
     static JOKER = new CharacterToEmoji('joker', 'Joker')
     static KEN = new CharacterToEmoji('ken', 'Ken')

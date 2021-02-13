@@ -67,6 +67,7 @@ commands['help'] = (msg: DiscordMessage, args) => {
   msg.reply(`Command: Help
 Setup message: @smash-drop setup 🔶 mario luigi peach 🟪 link zelda sheik younglink toonlink ❎ miibrawler miiswordfighter miigunner littlemac pit
 All commands: drop, setup, reroll, characters, add-golden, get-goldens, preference
+Details at: https://github.com/JeffSallans/discord-bot-smash-drop/blob/master/commands.md
 `);
 }
 

@@ -1,8 +1,8 @@
-# Discord Bot - Character Drop
+# Discord Bot - Smash Drop
 
-A node.js discord bot with the functionality of the [awesomecharacters drafter website](https://github.com/JeffSallans/awesomecharacters-drafter).
+Personalized random character picker for Super Smash Bros. Ultimate using Hearthstone pack mechanics.  Written in node.js.
 
-Based on the SitePoint  article: [https://www.sitepoint.com/discord-bot-node-js/](https://www.sitepoint.com/discord-bot-node-js/)
+Based on the SitePoint article: [https://www.sitepoint.com/discord-bot-node-js/](https://www.sitepoint.com/discord-bot-node-js/)
 
 ## Tech Stack
 
