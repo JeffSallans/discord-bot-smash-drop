@@ -1,8 +1,16 @@
-# Discord Bot - Smash Drop
+# Smash Drop - Discord Bot
 
-Personalized random character picker for Super Smash Bros. Ultimate using Hearthstone pack mechanics.  Written in node.js.
+🎲 Add the fun of opening crates to Smash! 🎲
 
-Based on the SitePoint article: [https://www.sitepoint.com/discord-bot-node-js/](https://www.sitepoint.com/discord-bot-node-js/)
+Personalized random character picker for Super Smash Bros. Ultimate using Hearthstone pack mechanics.
+
+![Drop Command Example](./markdown-assets/drop.PNG)
+
+## Setup
+
+Go to this link and select your server: https://discord.com/oauth2/authorize?client_id=805982500110204928&scope=bot
+
+---
 
 ## Tech Stack
 
@@ -12,6 +20,8 @@ Based on the SitePoint article: [https://www.sitepoint.com/discord-bot-node-js/]
 - [Discord.js]() See npm dependencies
 - [Lodash]() See npm dependencies
 - [Docker]() See Dockerfile
+
+Based on the SitePoint article: [https://www.sitepoint.com/discord-bot-node-js/](https://www.sitepoint.com/discord-bot-node-js/)
 
 ## Deployment
 

@@ -1,10 +1,20 @@
 # Smash Drop Discord Bot
 
+🎲 Add the fun of opening crates to Smash! 🎲
+
 Personalized random character picker for Super Smash Bros. Ultimate using Hearthstone pack mechanics.
+
+![Drop Command Example](./markdown-assets/drop.PNG)
 
 ## Setup
 
 Go to this link and select your server: https://discord.com/oauth2/authorize?client_id=805982500110204928&scope=bot
+
+## How to use
+
+[command guide](./commands.md)
+
+---
 
 ## Commands
 
