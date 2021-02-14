@@ -63,11 +63,19 @@ bot.on('ready', async () => {
  * Displays all possible funtionality to help the user
  * @param msg Discord message object
  */
-commands['help'] = (msg: DiscordMessage, args) => {
-  msg.reply(`Command: Help
+commands['help'] = async (msg: DiscordMessage, args) => {
+  const player = await getPlayerByDiscordId(msg.author.id);
+  if (player == null) {
+    msg.reply(`Command: Help
 Setup message: @smash-drop setup 🔶 mario luigi peach 🟪 link zelda sheik younglink toonlink ❎ miibrawler miiswordfighter miigunner littlemac pit
+Details at: <https://github.com/JeffSallans/discord-bot-smash-drop/blob/master/commands.md>
+`);
+    return;
+  }
+
+  msg.reply(`Command: Help
 All commands: drop, setup, reroll, characters, add-golden, get-goldens, preference
-Details at: https://github.com/JeffSallans/discord-bot-smash-drop/blob/master/commands.md
+Details at: <https://github.com/JeffSallans/discord-bot-smash-drop/blob/master/commands.md>
 `);
 }
 
