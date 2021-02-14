@@ -362,7 +362,7 @@ bot.on('message', async (msg: DiscordMessage) => {
       // Trigger the appropriate function from the given command
       const parsedCommandArray = content.replace(`<@${bot.user.id}>`, `<@!${bot.user.id}>`).split(`<@!${bot.user.id}>`);
       const parsedCommand = _.trim(_.get(parsedCommandArray, '[1]'));
-      const args = _.map(parsedCommand.split(' '), (argument) => {
+      const args = _.map(parsedCommand.split(/\W+/), (argument) => {
         return _.trim(argument)
       });
       const commandArg = args[0];
