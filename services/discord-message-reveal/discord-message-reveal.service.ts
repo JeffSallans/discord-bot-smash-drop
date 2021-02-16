@@ -18,7 +18,7 @@ interface ReactionEvent {
 export const setupDiscordMessageReveal = async (msg: DiscordMessage, messageConfig: MessageReveal[]) => {
   // Send initial message
   const initialMessage = getInitialMessageFromConfiguration(messageConfig);
-  const sentMessage = await msg.reply(initialMessage);
+  let sentMessage = await msg.reply(initialMessage);
 
   // Attach reactions and listeners
   attachReactions(sentMessage, messageConfig);
@@ -28,16 +28,16 @@ export const setupDiscordMessageReveal = async (msg: DiscordMessage, messageConf
   forEach(messageConfig, (config: MessageReveal, index) => {
     if (config.reactionEmoji !== '') {
       // Set max timeout
-      const timeout = setTimeout(() => {
-        revealOnReaction(sentMessage, null, config);
-      }, (30 + index) * 1000); // Reveal all after 30 seconds
+      const timeout = setTimeout(async () => {
+        sentMessage = await revealOnReaction(sentMessage, null, config);
+      }, (20 + index) * 1000); // Reveal all after 20 seconds
 
       // Listen for user reaction
       sentMessage?.awaitReactions((r: ReactionEvent, user: any) => reactionMatchesConfig(r, user, config),
-      {max: 1, time: (30 + index) * 1000})
-        .then((e: ReactionEvent) => {
+      {max: 1, time: 20 * 1000}) // Remove reaction listeners after 30 seconds
+        .then(async (e: ReactionEvent) => {
           clearTimeout(timeout);
-          revealOnReaction(sentMessage, e, config);
+          sentMessage = await revealOnReaction(sentMessage, e, config);
         });
 
     }
@@ -69,10 +69,10 @@ const reactionMatchesConfig = (event: ReactionEvent, user: { id: string, bot: bo
 }
 
 /** Identifies the reaction and updates the current messag accoringly */
-const revealOnReaction = (sentMessage: DiscordMessage, reactionEvent: ReactionEvent, config: MessageReveal) => {
+const revealOnReaction = async (sentMessage: DiscordMessage, reactionEvent: ReactionEvent, config: MessageReveal) => {
   let currentMessage = defaultTo(sentMessage?.content, '');
   currentMessage = currentMessage.replace(config.initialMessage, config.revealMessage);
-  sentMessage.edit(currentMessage);
+  return await sentMessage?.edit(currentMessage);
 }
 
 /** Returns true if all reveals have been made */
