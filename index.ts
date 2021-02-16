@@ -9,6 +9,8 @@ import { getEmoji, getPlayer, getPlayerList, characterPrefToString, parseCharact
 import { connection, connections, Mongoose } from 'mongoose';
 import { IPlayer } from './db/collections/Player';
 import { getDiscordMonospace } from './services/monospacer/monospacer.service';
+import { DiscordMessage } from './discord-message';
+import { setupDiscordMessageReveal } from './services/discord-message-reveal/discord-message-reveal.service';
 
 const _ = require('lodash');
 require('dotenv').config();
@@ -16,19 +18,6 @@ const Discord = require('discord.js');
 const bot = new Discord.Client();
 const TOKEN = process.env.TOKEN;
 const characterDataService = new CharacterDataService();
-
-/** Shape of the discord message received */
-interface DiscordMessage {
-  reply: (message: string) => void,
-  author: {
-    id: string,
-    username: string,
-  },
-  /** Message */
-  content: string,
-  /** Users mentioned in message */
-  mentions: any,
-}
 
 export const commands = {};
 let resolveReadyForCommands;
@@ -221,7 +210,27 @@ commands['drop'] = async (msg: DiscordMessage, args) => {
 ${message}`;
   }, '');
 
-  msg.reply(fullMessage);
+  const fullMessageParts = fullMessage.split('`  ');
+  const reactionEmoji = ['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣'];
+  const messageConfig = map(fullMessageParts, (messagePart, index) => {
+    const reaction = reactionEmoji[index];
+    if (reaction) {
+      return {
+        initialMessage: `${reactionEmoji[index]}\`React To Reveal\`  `,
+        revealMessage: `${messagePart}\`  `,
+        userDiscordId: allPlayers[0].discordUserId,
+        reactionEmoji: reactionEmoji[index],
+      };
+    }
+
+    return {
+      initialMessage: `${messagePart}`,
+      revealMessage: `${messagePart}`,
+      userDiscordId: allPlayers[0].discordUserId,
+      reactionEmoji: '',
+    };
+  });
+  setupDiscordMessageReveal(msg, messageConfig);
 }
 
 let dropCount = 0;

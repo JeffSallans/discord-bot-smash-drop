@@ -34,11 +34,11 @@ export class CharacterDataService {
     const shuffledRareCharacters = shuffle(rareCharacters);
 
     const characterPoolRolls = [
-      random(20),
-      random(20),
-      random(20),
-      random(20),
-      random(20),
+      random(19),
+      random(19),
+      random(19),
+      random(19),
+      random(19),
     ];
 
     const characterPool = map(characterPoolRolls, (roll) => {
@@ -58,7 +58,7 @@ export class CharacterDataService {
     }
 
     // Add golden plating
-    const goldPlatingIndex = random(15);
+    const goldPlatingIndex = random(14);
     if (!isNil(characterPool[goldPlatingIndex]) && characterPool[goldPlatingIndex].tier !== 'legendary') {
       characterPool[goldPlatingIndex].isGolden = true;
     }
