@@ -1,4 +1,4 @@
-import { forEach, map } from 'lodash'
+import { defaultTo, forEach, map } from 'lodash'
 import { DiscordMessage } from '../../discord-message'
 import { MessageReveal } from './message-reveal'
 
@@ -33,7 +33,7 @@ export const setupDiscordMessageReveal = async (msg: DiscordMessage, messageConf
       }, (30 + index) * 1000); // Reveal all after 30 seconds
 
       // Listen for user reaction
-      sentMessage.awaitReactions((r: ReactionEvent, user: any) => reactionMatchesConfig(r, user, config),
+      sentMessage?.awaitReactions((r: ReactionEvent, user: any) => reactionMatchesConfig(r, user, config),
       {max: 1, time: (30 + index) * 1000})
         .then((e: ReactionEvent) => {
           clearTimeout(timeout);
@@ -57,7 +57,7 @@ export const getRevealMessageFromConfiguration = (messageConfig: MessageReveal[]
 const attachReactions = (sentMessage: DiscordMessage, messageConfig: MessageReveal[]) => {
   forEach(messageConfig, (config) => {
     if (config.reactionEmoji !== '') {
-      sentMessage.react(config.reactionEmoji);
+      sentMessage?.react(config.reactionEmoji);
     }
   });
 }
@@ -70,7 +70,7 @@ const reactionMatchesConfig = (event: ReactionEvent, user: { id: string, bot: bo
 
 /** Identifies the reaction and updates the current messag accoringly */
 const revealOnReaction = (sentMessage: DiscordMessage, reactionEvent: ReactionEvent, config: MessageReveal) => {
-  let currentMessage = sentMessage.content;
+  let currentMessage = defaultTo(sentMessage?.content, '');
   currentMessage = currentMessage.replace(config.initialMessage, config.revealMessage);
   sentMessage.edit(currentMessage);
 }
