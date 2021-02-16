@@ -8,4 +8,6 @@ export interface MessageReveal {
   reactionEmoji: string,
   /** The user to wait for the reaction from */
   userDiscordId: string,
+  /** True if the message has been revealed */
+  isRevealed: boolean,
 }

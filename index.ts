@@ -220,6 +220,7 @@ ${message}`;
         revealMessage: `${messagePart}\`  `,
         userDiscordId: allPlayers[0].discordUserId,
         reactionEmoji: reactionEmoji[index],
+        isRevealed: false,
       };
     }
 
@@ -228,6 +229,7 @@ ${message}`;
       revealMessage: `${messagePart}`,
       userDiscordId: allPlayers[0].discordUserId,
       reactionEmoji: '',
+      isRevealed: false,
     };
   });
   setupDiscordMessageReveal(msg, messageConfig);

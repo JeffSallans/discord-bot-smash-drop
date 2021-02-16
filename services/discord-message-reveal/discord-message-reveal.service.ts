@@ -29,15 +29,15 @@ export const setupDiscordMessageReveal = async (msg: DiscordMessage, messageConf
     if (config.reactionEmoji !== '') {
       // Set max timeout
       const timeout = setTimeout(async () => {
-        sentMessage = await revealOnReaction(sentMessage, null, config);
-      }, (20 + index) * 1000); // Reveal all after 20 seconds
+        sentMessage = await revealOnReaction(sentMessage, null, config, messageConfig);
+      }, (15 + index*2) * 1000); // Reveal all after 20 seconds
 
       // Listen for user reaction
       sentMessage?.awaitReactions((r: ReactionEvent, user: any) => reactionMatchesConfig(r, user, config),
       {max: 1, time: 20 * 1000}) // Remove reaction listeners after 30 seconds
         .then(async (e: ReactionEvent) => {
           clearTimeout(timeout);
-          sentMessage = await revealOnReaction(sentMessage, e, config);
+          sentMessage = await revealOnReaction(sentMessage, e, config, messageConfig);
         });
 
     }
@@ -55,9 +55,9 @@ export const getRevealMessageFromConfiguration = (messageConfig: MessageReveal[]
 }
 
 const attachReactions = (sentMessage: DiscordMessage, messageConfig: MessageReveal[]) => {
-  forEach(messageConfig, (config) => {
+  forEach(messageConfig, async (config) => {
     if (config.reactionEmoji !== '') {
-      sentMessage?.react(config.reactionEmoji);
+      await sentMessage?.react(config.reactionEmoji);
     }
   });
 }
@@ -68,15 +68,22 @@ const reactionMatchesConfig = (event: ReactionEvent, user: { id: string, bot: bo
         user.id === config.userDiscordId;
 }
 
-/** Identifies the reaction and updates the current messag accoringly */
-const revealOnReaction = async (sentMessage: DiscordMessage, reactionEvent: ReactionEvent, config: MessageReveal) => {
-  let currentMessage = defaultTo(sentMessage?.content, '');
-  currentMessage = currentMessage.replace(config.initialMessage, config.revealMessage);
-  return await sentMessage?.edit(currentMessage);
+/**
+ * Identifies the reaction and updates the current message accoringly
+ * @modifies reactionEvent
+ */
+const revealOnReaction = async (sentMessage: DiscordMessage, reactionEvent: ReactionEvent, config: MessageReveal, allConfigs: MessageReveal[]) => {
+  config.isRevealed = true;
+  const message = getMessageFromAllConfigs(allConfigs)
+  return await sentMessage?.edit(message);
 }
 
-/** Returns true if all reveals have been made */
-const areRevealsFinished = (sentMessage: DiscordMessage, messageConfig: MessageReveal[]):boolean => {
-  const revealedMessage = getRevealMessageFromConfiguration(messageConfig);
-  return (sentMessage.content === revealedMessage);
+/** Returns the message from all the given configs */
+const getMessageFromAllConfigs = (allConfigs: MessageReveal[]) => {
+  const messageParts = map(allConfigs, (config) => {
+    if (config.isRevealed) return config.revealMessage;
+    return config.initialMessage;
+  });
+  return messageParts.join('');
 }
+
