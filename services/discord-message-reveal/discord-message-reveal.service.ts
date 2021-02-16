@@ -28,16 +28,16 @@ export const setupDiscordMessageReveal = async (msg: DiscordMessage, messageConf
   forEach(messageConfig, (config: MessageReveal, index) => {
     if (config.reactionEmoji !== '') {
       // Set max timeout
-      const timeout = setTimeout(async () => {
-        sentMessage = await revealOnReaction(sentMessage, null, config, messageConfig);
+      const timeout = setTimeout(() => {
+        revealOnReaction(sentMessage, null, config, messageConfig);
       }, (15 + index*2) * 1000); // Reveal all after 20 seconds
 
       // Listen for user reaction
       sentMessage?.awaitReactions((r: ReactionEvent, user: any) => reactionMatchesConfig(r, user, config),
       {max: 1, time: 20 * 1000}) // Remove reaction listeners after 30 seconds
-        .then(async (e: ReactionEvent) => {
+        .then((e: ReactionEvent) => {
           clearTimeout(timeout);
-          sentMessage = await revealOnReaction(sentMessage, e, config, messageConfig);
+          revealOnReaction(sentMessage, e, config, messageConfig);
         });
 
     }
@@ -72,10 +72,10 @@ const reactionMatchesConfig = (event: ReactionEvent, user: { id: string, bot: bo
  * Identifies the reaction and updates the current message accoringly
  * @modifies reactionEvent
  */
-const revealOnReaction = async (sentMessage: DiscordMessage, reactionEvent: ReactionEvent, config: MessageReveal, allConfigs: MessageReveal[]) => {
+const revealOnReaction = (sentMessage: DiscordMessage, reactionEvent: ReactionEvent, config: MessageReveal, allConfigs: MessageReveal[]) => {
   config.isRevealed = true;
   const message = getMessageFromAllConfigs(allConfigs)
-  return await sentMessage?.edit(message);
+  return sentMessage?.edit(message);
 }
 
 /** Returns the message from all the given configs */
