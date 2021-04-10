@@ -59,6 +59,7 @@ export class CharacterToEmoji extends Enum {
     static PIRANHA_PLANT = new CharacterToEmoji('piranha_plant', 'Piranha Plant')
     static PIT = new CharacterToEmoji('pit', 'Pit')
     static POKEMON_TRAINER = new CharacterToEmoji('pokemon_trainer', 'Pokemon Trainer')
+    static PYRA = new CharacterToEmoji('pyra_mythra', 'Pyra & Mythra')
     static RICHTER = new CharacterToEmoji('richter', 'Richter')
     static RIDLEY = new CharacterToEmoji('ridley', 'Ridley')
     static ROB = new CharacterToEmoji('rob', 'Rob')
